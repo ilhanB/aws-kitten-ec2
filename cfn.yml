@@ -7,19 +7,40 @@ Description: |
   is downloaded from my Public Github repository, then deployed on Apache Web Server.
 
 Parameters:
-  
+
+  latestAmiId:
+    Type: 'AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>'
+    Default: '/aws/service/ami-amazon-linux-latest/al2023-ami-kernel-6.1-x86_64'
+
+  myKeyPair:
+    Description: choose your key pair
+    Type: AWS::EC2::KeyPair::KeyName
+    
+
+  myInstanceType:
+    Description: I like t3 micro but you can choose any one
+    Type: String
+    Default: t3.micro
+    AllowedValues:
+      - t2.nano
+      - t2.micro
+      - t3.nano
+      - t3.micro
+      - t3.small
+    
+    
+
+
 Resources: 
   
-  LogicalID:
+  myWebServer:
     Type: AWS::EC2::Instance
     Properties:
-      ImageId: "String"
-      InstanceType: "String"
-      KeyName: "String"
+      ImageId: !Ref latestAmiId
+      InstanceType: !Ref myInstanceType
+      KeyName: !Ref myKeyPair
       SecurityGroupIds: 
-        - "String"
-      SecurityGroups: 
-        - "String"
+        - !Ref mySecGrp #!GetAtt mySecGrp.GroupId
       Tags: 
         - Key: "Name"
           Value: !Sub web server of ${AWS::StackName} stack
@@ -31,10 +52,10 @@ Resources:
           systemctl enable httpd
           cd /var/www/html/
           FOLDER="https://raw.githubusercontent.com/ilhanB/aws-kitten-ec2/refs/heads/main/static-web/"
-          wget ${FOLDER}index.html
-          wget ${FOLDER}cat0.jpg
-          wget ${FOLDER}cat1.jpg
-          wget ${FOLDER}cat2.jpg
+          wget ${FOLDER}/index.html
+          wget ${FOLDER}/cat0.jpg
+          wget ${FOLDER}/cat1.jpg
+          wget ${FOLDER}/cat2.jpg
     
 
   mySecGrp:
@@ -61,6 +82,5 @@ Outputs:
   webSiteURL:
     Description: URL of website
     Value: !Sub
-      - 
-      - 
-   
+      - http://${publicIP}
+      - publicIP: !GetAtt myWebServer.PublicIp
